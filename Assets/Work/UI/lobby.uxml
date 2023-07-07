@@ -1,0 +1,5 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); flex-direction: column-reverse;">
+        <ui:VisualElement name="VisualElement" style="background-color: rgb(72, 72, 72); height: 30%; width: 100%;" />
+    </ui:VisualElement>
+</ui:UXML>
