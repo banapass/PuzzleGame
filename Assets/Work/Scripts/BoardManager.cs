@@ -11,6 +11,7 @@ namespace PuzzleGame
 
         [SerializeField] Tile tilePrefab;
         [SerializeField] int createCount;
+        [SerializeField] int cameraSpecing;
 
         // Start is called before the first frame update
         void Start()
@@ -53,7 +54,7 @@ namespace PuzzleGame
         }
         private void CameraResizing(int _count)
         {
-            Vector2 spriteSize = tilePrefab.GetTileSize() * (_count + 2);
+            Vector2 spriteSize = tilePrefab.GetTileSize() * (_count + cameraSpecing);
 
             // SpriteRenderer의 가로 크기를 기준으로 orthographic size 계산
             float orthoSize = spriteSize.x * 0.5f / GameCamera.aspect;
