@@ -10,12 +10,6 @@ namespace PuzzleGame
         public Vector2Int TilePos { get; private set; }
         public Block InBlock { get; private set; }
 
-        private SpriteRenderer spriteRender;
-        private void Awake()
-        {
-            spriteRender = GetComponent<SpriteRenderer>();
-        }
-
         public void SetTilePos(int _x, int _y)
         {
             TilePos = new Vector2Int(_x, _y);
@@ -26,8 +20,7 @@ namespace PuzzleGame
         }
         public Vector2 GetTileSize()
         {
-            if (spriteRender == null) spriteRender = GetComponent<SpriteRenderer>();
-            return spriteRender.size;
+            return transform.localScale;
         }
     }
 

@@ -154,6 +154,7 @@ PlayerSettings:
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
+    Android: com.DefaultCompany.PuzzleUnityProject
     Standalone: com.DefaultCompany.Puzzle-Unity-Project
   buildNumber:
     Bratwurst: 0

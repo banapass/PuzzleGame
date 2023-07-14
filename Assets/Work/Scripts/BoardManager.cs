@@ -8,7 +8,7 @@ namespace PuzzleGame
     {
         [field: SerializeField]
         public Camera GameCamera { get; private set; }
-
+        [SerializeField] Transform boardArea;
         [SerializeField] Tile tilePrefab;
         [SerializeField] int createCount;
         [SerializeField] int cameraSpecing;
@@ -17,7 +17,7 @@ namespace PuzzleGame
         void Start()
         {
             CreateBoard(createCount);
-            CameraResizing(createCount);
+            // CameraResizing(createCount);
         }
 
         private void CreateBoard(int _size)
@@ -25,25 +25,23 @@ namespace PuzzleGame
             bool _isOddNumber = _size % 2 != 0;
             float _start = _size / 2;
 
-            Vector2 _startPos = new Vector2(-_start, -_start);
-            float _count = 0;
-            float _maxColorCount = Mathf.Pow(_size, 2);
+
+            Vector2 _resolusionSize = boardArea.localScale / createCount;
+            Vector2 _startPos = (Vector2)boardArea.transform.position + new Vector2(-_start, -_start) * _resolusionSize;
 
             for (int y = 0; y < _size; y++)
             {
                 for (int x = 0; x < _size; x++)
                 {
                     var _tile = Instantiate(tilePrefab, transform);
-                    Vector2 _tileSize = _tile.GetTileSize();
-                    Vector2 _nextPos = new Vector2(x, y) * _tileSize;
+                    _tile.transform.localScale = _resolusionSize;
+
+                    Vector2 _nextPos = new Vector2(x, y) * _resolusionSize;
+                    if (!_isOddNumber) _nextPos += Vector2.one * 0.5f;
 
                     _tile.SetTilePos(x, y);
                     _tile.name = string.Format($"({x} / {y})");
-                    if (!_isOddNumber) _nextPos += Vector2.one * 0.5f;
-                    // Debug.Log($"Count : {_count} / MaxCount : {_maxColorCount} / Amount : {_count / _maxColorCount}");
-                    // _tile.color = Color.Lerp(Color.white, Color.black, _count / _maxColorCount);
                     _tile.transform.position = _startPos + _nextPos;
-                    _count++;
                 }
             }
         }
