@@ -17,7 +17,7 @@ namespace PuzzleGame
         void Start()
         {
             CreateBoard(createCount);
-            // CameraResizing(createCount);
+            CameraResizing(boardArea.localScale.x);
         }
 
         private void CreateBoard(int _size)
@@ -37,7 +37,7 @@ namespace PuzzleGame
                     _tile.transform.localScale = _resolusionSize;
 
                     Vector2 _nextPos = new Vector2(x, y) * _resolusionSize;
-                    if (!_isOddNumber) _nextPos += Vector2.one * 0.5f;
+                    if (!_isOddNumber) _nextPos += Vector2.one * (_resolusionSize * 0.5f);
 
                     _tile.SetTilePos(x, y);
                     _tile.name = string.Format($"({x} / {y})");
@@ -50,7 +50,7 @@ namespace PuzzleGame
         {
             Gizmos.DrawWireCube(transform.position, Vector2.one);
         }
-        private void CameraResizing(int _count)
+        private void CameraResizing(float _count)
         {
             Vector2 spriteSize = tilePrefab.GetTileSize() * (_count + cameraSpecing);
 

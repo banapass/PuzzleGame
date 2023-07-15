@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEngine.UIElements;
 using System;
 
+#if UNITY_EDITOR
 public class BlockCreateEditor : MonoBehaviour
 {
     [SerializeField] Block baseBlock;
@@ -163,3 +164,4 @@ public class BlockCreateEditor : MonoBehaviour
         return false;
     }
 }
+#endif

@@ -1,0 +1,7 @@
+.block-slot {
+    flex-grow: 1;
+    background-color: rgba(0, 0, 0, 0);
+    width: 33%;
+    height: 33%;
+    background-image: url('project://database/Assets/Work/Art/Block/blockSlot.png?fileID=21300000&guid=a8111f37aef623448ba47da7cf4766f3&type=3#blockSlot');
+}

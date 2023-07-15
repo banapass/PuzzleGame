@@ -389,7 +389,7 @@ MonoBehaviour:
   <GameCamera>k__BackingField: {fileID: 519420031}
   boardArea: {fileID: 1588890565}
   tilePrefab: {fileID: 4231726243246526837, guid: 5c0d8c138819a264da698102dd568633, type: 3}
-  createCount: 11
+  createCount: 9
   cameraSpecing: 1
 --- !u!1 &1052989053
 GameObject:
@@ -408,7 +408,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1052989054
 MonoBehaviour:
   m_ObjectHideFlags: 0

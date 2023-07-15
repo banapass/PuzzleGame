@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 using System;
-
+#if UNITY_EDITOR
 public class BlockBuildUI : MonoBehaviour
 {
     [SerializeField] BlockCreateEditor blockEditor;
@@ -28,3 +28,4 @@ public class BlockBuildUI : MonoBehaviour
         }
     }
 }
+#endif
