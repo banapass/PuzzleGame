@@ -1,45 +1,64 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Utility;
 
+
+public class TileVisualElement : VisualElement
+{
+    public Tile InTile { get; private set; }
+    public TileVisualElement(string _className, Tile _targetTile)
+    {
+        this.AddToClassList(_className);
+        InTile = _targetTile;
+    }
+}
+
 public class UITester : MonoBehaviour
 {
 
     private UIDocument doc;
     private VisualElement rootElement;
+    private VisualElement debug;
     [SerializeField] Transform target;
     private Camera mainCamera;
+    private Tile[,] tiles;
+    private List<VisualElement> debugs = new List<VisualElement>();
 
 
 
     private void Awake()
     {
         doc = GetComponent<UIDocument>();
-        // doc.panelSettings.scale = CalculateScaleFromResolution(1080, 1920);
         rootElement = doc.rootVisualElement;
-        // VisualElement _debug = rootElement.Q("debug");
-        VisualElement _obj = rootElement.Q("obj");
+
+        debug = rootElement.Q("obj");
         VisualElement _block = rootElement.Q("block");
-        // _debug.transform.position = _block.transform.position;
-
-        // Debug.Log(_debug.transform.position);
-        Debug.Log(_block.transform.position);
-
 
         int _size = 5;
-        float _createCount = Mathf.Pow(_size, 2);
+        // float _createCount = Mathf.Pow(_size, 2);
         StyleLength _newSlotSize = new StyleLength(new Length(100 / _size, LengthUnit.Percent));
+        tiles = new Tile[_size, _size];
 
-        for (int i = 0; i < _createCount; i++)
+        for (int y = 0; y < _size; y++)
         {
-            VisualElement _newSlot = new VisualElement();
-            _newSlot.AddToClassList("block-slot");
-            _newSlot.style.width = _newSlotSize;
-            _newSlot.style.height = _newSlotSize;
+            for (int x = 0; x < _size; x++)
+            {
+                Tile _newTile = CreateNewTile(x, y);
+                tiles[y, x] = _newTile;
 
-            _block.Add(_newSlot);
+                TileVisualElement _newSlot = new TileVisualElement("block-slot", _newTile);
+
+                _newSlot.RegisterCallback<MouseEnterEvent, TileVisualElement>(OnMouseEnterSlot, _newSlot);
+                _newSlot.RegisterCallback<TransitionStartEvent, string>(OnStartEvent, "Destroy");
+
+                _newSlot.style.width = _newSlotSize;
+                _newSlot.style.height = _newSlotSize;
+
+                _block.Add(_newSlot);
+            }
         }
 
         // _debug.RegisterCallback<MouseDownEvent>(_event =>
@@ -76,11 +95,33 @@ public class UITester : MonoBehaviour
 
 
     }
-    private void CreateBoardSlots(int _size)
+    private Tile CreateNewTile(int x, int y)
+    {
+        Tile _newTile = new Tile();
+        _newTile.SetCoord(x, y);
+
+        return _newTile;
+    }
+
+    private void OnStartEvent(TransitionStartEvent evt, string _className)
     {
 
     }
 
+    private void CreateBoardSlots(int _size)
+    {
+
+    }
+    private void OnMouseEnterSlot(MouseEnterEvent _event, TileVisualElement _slot)
+    {
+        if (_slot == null) return;
+
+        Vector2 _slotPos = _slot.GetCenterPosition();
+        debug.style.left = _slotPos.x;
+        debug.style.top = _slotPos.y;
+
+        _event.StopPropagation();
+    }
     public float CalculateScaleFromResolution(float referenceResolutionWidth, float referenceResolutionHeight)
     {
         float screenWidth = Screen.width;
