@@ -18,6 +18,11 @@ namespace Utility
 
             return _position + _halfSize;
         }
+        public static void Translate(this VisualElement value, Vector2 _pos)
+        {
+            value.style.left = _pos.x;
+            value.style.top = _pos.y;
+        }
     }
 
 }

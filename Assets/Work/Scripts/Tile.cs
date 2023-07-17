@@ -5,12 +5,12 @@ using UnityEngine;
 
 public class Tile
 {
-    public Vector2Int TileCoord { get; private set; }
+    public Coord TileCoord { get; private set; }
     public Block InBlock { get; private set; }
 
     public void SetCoord(int _x, int _y)
     {
-        TileCoord = new Vector2Int(_x, _y);
+        TileCoord = new Coord(_x, _y);
     }
     public void SetBlock(Block _block)
     {

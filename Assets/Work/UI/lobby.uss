@@ -27,3 +27,13 @@
     border-top-right-radius: 50px;
     border-bottom-right-radius: 50px;
 }
+
+.debug-block {
+    flex-grow: 1;
+    background-color: rgb(255, 105, 105);
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    translate: -50% -50%;
+    transform-origin: center;
+}

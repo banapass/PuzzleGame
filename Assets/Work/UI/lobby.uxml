@@ -5,5 +5,5 @@
         <ui:VisualElement name="block" class="board-area" />
         <ui:VisualElement style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); width: 100%; height: 20%;" />
     </ui:VisualElement>
-    <ui:VisualElement name="obj" style="flex-grow: 1; background-color: rgb(255, 105, 105); position: absolute; width: 100px; height: 100px; translate: -50% -50%; transform-origin: center;" />
+    <ui:VisualElement name="obj" class="debug-block" />
 </ui:UXML>
