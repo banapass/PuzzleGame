@@ -6,57 +6,27 @@ using UnityEngine.UIElements;
 using Utility;
 
 
-public class TileElement : VisualElement
-{
-    public Tile InTile { get; private set; }
-    public Coord[] BatchCoord { get; private set; }
-    public TileElement(string _className, Tile _targetTile)
-    {
-        this.AddToClassList(_className);
-        InTile = _targetTile;
-        BatchCoord = Coord.FourDirection;
-    }
-}
-
-public class BlockElement : VisualElement
-{
-    public BlockInfo InBlockInfo { get; private set; }
-    public Coord[] BatchCoord { get { return InBlockInfo.BlockCoord; } }
-    public BlockElement()
-    {
-
-    }
-    public BlockElement(string _className, BlockInfo _blockInfo)
-    {
-        if (_className != null) this.AddToClassList(_className);
-        InBlockInfo = _blockInfo;
-    }
-}
-
-
-
-public class UITester : MonoBehaviour
+public class InGameUI : MonoBehaviour
 {
 
     private UIDocument doc;
-    private VisualElement rootElement;
-    private VisualElement debug;
-    private TileElement highlightTile = null;
-    [SerializeField] Transform target;
-    private Camera mainCamera;
-    private TileElement[,] tiles;
+
+    #region  Elements
+    private VisualElement rootElement; // 최상단 VisualElement
+    private VisualElement boardElement;
+    private TileElement highlightTile = null; // 가장 최근 마우스가 들어온 타일
+    private TileElement[,] tiles; // 보드 타일맵
+    private BlockElement selectedBlock; // 선택된 블록
+    #endregion
+
+    #region Debug Tools
     private List<VisualElement> debugs = new List<VisualElement>();
-    private BlockElement selectedBlock;
 
+    #endregion
 
-    private void Awake()
+    public void Init()
     {
-        doc = GetComponent<UIDocument>();
-        rootElement = doc.rootVisualElement;
-
-        // 디버깅 용
-        // debug = rootElement.Q("obj");
-        // debugs.Add(debug);
+        BindVariable();
         for (int i = 0; i < 5; i++)
         {
             VisualElement _newDebugObj = new VisualElement();
@@ -64,16 +34,62 @@ public class UITester : MonoBehaviour
             debugs.Add(_newDebugObj);
             rootElement.Add(_newDebugObj);
             _newDebugObj.pickingMode = PickingMode.Ignore;
-        }
-        selectedBlock = new BlockElement(null, TableManager.Instance.BlockInfos[0]);
 
-        DisableDebugObjs();
+        }
+        StartCoroutine(NextFrame());
+    }
+    private IEnumerator NextFrame()
+    {
+        yield return new WaitForEndOfFrame();
+
+
         // 디버깅 용
 
-        VisualElement _block = rootElement.Q("block");
 
-        int _size = 5;
-        // float _createCount = Mathf.Pow(_size, 2);
+        selectedBlock = new BlockElement(null, TableManager.Instance.BlockInfos[0]);
+        // rootElement.Add();
+        DisableDebugObjs();
+        BlockBuild();
+        // VisualElement _debug1 = GetDebugObj();
+        // VisualElement _debug2 = GetDebugObj();
+        // VisualElement _debug3 = GetDebugObj();
+
+        // _debug1.style.left = boardElement.GetCenterPosition().x;
+        // _debug1.style.top = boardElement.GetCenterPosition().y;
+
+        // Debug.Log(_debug2.transform);
+        // _debug2.style.left = boardElement.GetCenterPosition().x + _debug2.layout.width;
+        // _debug2.style.top = boardElement.GetCenterPosition().y;
+
+        // _debug3.style.left = boardElement.GetCenterPosition().x + _debug3.layout.width * 2;
+        // _debug3.style.top = boardElement.GetCenterPosition().y;
+        // 디버깅 용
+        CreateBoard(5);
+    }
+    private void BlockBuild()
+    {
+        Vector2 _centerPos = boardElement.GetCenterPosition();
+        for (int i = 0; i < selectedBlock.BatchCoord.Length; i++)
+        {
+            VisualElement _block = GetDebugObj();
+
+            float _nextX = selectedBlock.BatchCoord[i].x * _block.layout.width;
+            float _nextY = selectedBlock.BatchCoord[i].y * _block.layout.height;
+            Vector2 _calculatedPos = _centerPos + new Vector2(_nextX, _nextY);
+
+            _block.style.left = _calculatedPos.x;
+            _block.style.top = _calculatedPos.y;
+            _block.style.backgroundImage = new StyleBackground(AtlasManager.Instance.GetSprite("redBlock 1"));
+        }
+    }
+    private void BindVariable()
+    {
+        doc = GetComponent<UIDocument>();
+        rootElement = doc.rootVisualElement;
+        boardElement = rootElement.Q("board");
+    }
+    private void CreateBoard(int _size)
+    {
         StyleLength _newSlotSize = new StyleLength(new Length(100 / _size, LengthUnit.Percent));
         tiles = new TileElement[_size, _size];
 
@@ -94,43 +110,9 @@ public class UITester : MonoBehaviour
 
 
                 tiles[y, x] = _newSlot;
-                _block.Add(_newSlot);
+                boardElement.Add(_newSlot);
             }
         }
-
-        // _debug.RegisterCallback<MouseDownEvent>(_event =>
-        // {
-        //     Vector2 clickPosition = _event.mousePosition;
-
-        //     // Debug.Log(_debug.layout.x);
-        //     // Debug.Log(_debug.layout.y);
-        //     // Debug.Log(_debug.layout);
-        //     // VisualElement 이동하기
-        //     // (_debug.worldTransform.GetPosition() + new Vector3(_debug.layout.width, _debug.layout.height) * 0.5f);
-        //     Vector2 _newPos = _debug.GetCenterPosition();
-        //     _obj.style.width = _debug.layout.width;
-        //     _obj.style.height = _debug.layout.height;
-
-
-        //     _obj.style.left = _newPos.x;
-        //     _obj.style.top = _newPos.y;
-
-
-        //     _event.StopPropagation();
-        // });
-
-        // rootElement.RegisterCallback<MouseEnterEvent>(_event =>
-        // {
-        //     if (mainCamera == null) mainCamera = Camera.main;
-
-        //     Debug.Log(rootElement.resolvedStyle.position);
-        //     Debug.Log(rootElement.transform);
-        //     // target.transform.position = (Vector2)mainCamera.ScreenToWorldPoint(Input.mousePosition);
-        // });
-
-
-
-
     }
     private Tile CreateNewTile(int x, int y)
     {
@@ -226,6 +208,10 @@ public class UITester : MonoBehaviour
         }
 
     }
+
+
+
+    #region Debug Func
     private void DisableDebugObjs()
     {
         for (int i = 0; i < debugs.Count; i++)
@@ -243,17 +229,7 @@ public class UITester : MonoBehaviour
         }
         return null;
     }
-    public float CalculateScaleFromResolution(float referenceResolutionWidth, float referenceResolutionHeight)
-    {
-        float screenWidth = Screen.width;
-        float screenHeight = Screen.height;
 
-        float aspectRatio = screenWidth / screenHeight;
-        float referenceAspectRatio = referenceResolutionWidth / referenceResolutionHeight;
-
-        float scale = aspectRatio / referenceAspectRatio;
-
-        return scale;
-    }
+    #endregion
 
 }

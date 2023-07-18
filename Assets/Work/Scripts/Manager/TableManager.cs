@@ -8,6 +8,10 @@ public class TableManager : Singleton<TableManager>
     protected override void Awake()
     {
         base.Awake();
+
+    }
+    public void Init()
+    {
         ParsingJson();
     }
     private void ParsingJson()

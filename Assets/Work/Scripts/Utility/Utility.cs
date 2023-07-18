@@ -23,6 +23,19 @@ namespace Utility
             value.style.left = _pos.x;
             value.style.top = _pos.y;
         }
+
+        public static float CalculateScaleFromResolution(float referenceResolutionWidth, float referenceResolutionHeight)
+        {
+            float screenWidth = Screen.width;
+            float screenHeight = Screen.height;
+
+            float aspectRatio = screenWidth / screenHeight;
+            float referenceAspectRatio = referenceResolutionWidth / referenceResolutionHeight;
+
+            float scale = aspectRatio / referenceAspectRatio;
+
+            return scale;
+        }
     }
 
 }

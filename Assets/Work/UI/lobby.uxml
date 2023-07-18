@@ -1,9 +1,9 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/Work/UI/lobby.uss?fileID=7433441132597879392&amp;guid=c0653690d9737e24e8e0fb718d35f445&amp;type=3#lobby" />
     <ui:VisualElement style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); flex-direction: column-reverse;">
-        <ui:VisualElement style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); height: 30%; width: 100%;" />
-        <ui:VisualElement name="block" class="board-area" />
-        <ui:VisualElement style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); width: 100%; height: 20%;" />
+        <ui:VisualElement name="bottom" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); height: 30%; width: 100%;" />
+        <ui:VisualElement name="board" class="board-area" />
+        <ui:VisualElement name="top" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); width: 100%; height: 20%;" />
     </ui:VisualElement>
     <ui:VisualElement name="obj" class="debug-block" />
 </ui:UXML>
