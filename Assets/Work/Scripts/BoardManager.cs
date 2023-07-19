@@ -9,7 +9,7 @@ namespace PuzzleGame
         [field: SerializeField]
         public Camera GameCamera { get; private set; }
         [SerializeField] Transform boardArea;
-        [SerializeField] Tile tilePrefab;
+        // [SerializeField] Tile tilePrefab;
         [SerializeField] int createCount;
         [SerializeField] int cameraSpecing;
 

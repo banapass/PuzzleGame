@@ -14,56 +14,55 @@ public class InGameUI : MonoBehaviour
     #region  Elements
     private VisualElement rootElement; // 최상단 VisualElement
     private VisualElement boardElement;
+    private VisualElement bottomRoot;
+    private VisualElement[] blockPickSlots;
     private TileElement highlightTile = null; // 가장 최근 마우스가 들어온 타일
     private TileElement[,] tiles; // 보드 타일맵
     private BlockElement selectedBlock; // 선택된 블록
+
     #endregion
 
     #region Debug Tools
     private List<VisualElement> debugs = new List<VisualElement>();
-
     #endregion
+
+    private ElementsPool elementsPool;
 
     public void Init()
     {
+        //for (int i = 0; i < 20; i++)
+        //    CreateDebugElement();
         BindVariable();
-        for (int i = 0; i < 5; i++)
-        {
-            VisualElement _newDebugObj = new VisualElement();
-            _newDebugObj.AddToClassList("debug-block");
-            debugs.Add(_newDebugObj);
-            rootElement.Add(_newDebugObj);
-            _newDebugObj.pickingMode = PickingMode.Ignore;
+        elementsPool = new ElementsPool();
+        elementsPool.AddPool<BlockDummyElement>(Constants.BLOCK_KEY, 60, rootElement);
 
-        }
-        StartCoroutine(NextFrame());
+        StartCoroutine(NextFrame(DebugInit));
+
     }
-    private IEnumerator NextFrame()
+    private IEnumerator NextFrame(Action _callBack)
+    {
+        yield return new WaitForEndOfFrame();
+        _callBack();
+    }
+    private IEnumerator NextFrame<T>(Action<T> _callBack, T _param) where T : struct
     {
         yield return new WaitForEndOfFrame();
 
-
+        _callBack(_param);
+    }
+    private void DebugInit()
+    {
         // 디버깅 용
-
-
-        selectedBlock = new BlockElement(null, TableManager.Instance.BlockInfos[0]);
+        selectedBlock = new BlockElement("block", TableManager.Instance.BlockInfos[0]);
+        rootElement.Add(selectedBlock.CloneVisualElement<BlockElement>());
         // rootElement.Add();
-        DisableDebugObjs();
-        BlockBuild();
-        // VisualElement _debug1 = GetDebugObj();
-        // VisualElement _debug2 = GetDebugObj();
-        // VisualElement _debug3 = GetDebugObj();
-
-        // _debug1.style.left = boardElement.GetCenterPosition().x;
-        // _debug1.style.top = boardElement.GetCenterPosition().y;
-
-        // Debug.Log(_debug2.transform);
-        // _debug2.style.left = boardElement.GetCenterPosition().x + _debug2.layout.width;
-        // _debug2.style.top = boardElement.GetCenterPosition().y;
-
-        // _debug3.style.left = boardElement.GetCenterPosition().x + _debug3.layout.width * 2;
-        // _debug3.style.top = boardElement.GetCenterPosition().y;
+        //DisableDebugObjs();
+        // BlockBuild();
         // 디버깅 용
+        for (int i = 0; i < blockPickSlots.Length; i++)
+        {
+            BlockBuild(blockPickSlots[i], selectedBlock);
+        }
         CreateBoard(5);
     }
     private void BlockBuild()
@@ -80,6 +79,49 @@ public class InGameUI : MonoBehaviour
             _block.style.left = _calculatedPos.x;
             _block.style.top = _calculatedPos.y;
             _block.style.backgroundImage = new StyleBackground(AtlasManager.Instance.GetSprite("redBlock 1"));
+
+        }
+    }
+    private void BlockBuild(VisualElement _center, BlockElement _blockElement)
+    {
+        Vector2 _centerPos = _center.GetLocalPosition();
+        Vector2 _blockCount = _blockElement.InBlockInfo.GetSize();
+        //_blockElement.InBlockInfo.GetSize();
+
+        for (int i = 0; i < _blockElement.BatchCoord.Length; i++)
+        {
+            BlockDummyElement _block = elementsPool.GetParts<BlockDummyElement>(Constants.BLOCK_KEY);
+            Vector2 _blockSize = new Vector2(_center.layout.width / _blockCount.x, _center.layout.height / _blockCount.y);
+
+            _center.Add(_block);
+            _block.style.width = _blockSize.x;//_center.layout.width / _blockSize.x;//new StyleLength(new Length(, LengthUnit.Percent));
+            _block.style.height = _blockSize.y;//_center.layout.height / _blockSize.y;//new StyleLength(new Length(, LengthUnit.Percent));
+
+
+            if (float.IsNaN(_block.layout.width))
+            {
+                StartCoroutine(NextFrame<int>(_index =>
+                {
+                    float _nextX = _blockElement.BatchCoord[_index].x * _blockSize.x;// _block.layout.width;
+                    float _nextY = _blockElement.BatchCoord[_index].y * _blockSize.y;//_block.layout.height;
+                    Vector2 _calculatedPos = _centerPos + new Vector2(_nextX, _nextY);
+
+                    _block.style.left = _calculatedPos.x;
+                    _block.style.top = _calculatedPos.y;
+                    _block.BlockBatch(TableManager.Instance.BlockInfos[0]);
+                }, i));
+            }
+            else
+            {
+                Debug.Log("IN Un Nan");
+                float _nextX = _blockElement.BatchCoord[i].x * _blockSize.x;
+                float _nextY = _blockElement.BatchCoord[i].y * _blockSize.y;
+                Vector2 _calculatedPos = _centerPos + new Vector2(_nextX, _nextY);
+
+                _block.style.left = _calculatedPos.x;
+                _block.style.top = _calculatedPos.y;
+                _block.BlockBatch(TableManager.Instance.BlockInfos[0]);
+            }
         }
     }
     private void BindVariable()
@@ -87,6 +129,18 @@ public class InGameUI : MonoBehaviour
         doc = GetComponent<UIDocument>();
         rootElement = doc.rootVisualElement;
         boardElement = rootElement.Q("board");
+        bottomRoot = rootElement.Q("bottom");
+        blockPickSlots = new VisualElement[bottomRoot.childCount];
+
+        // boardElement.RegisterCallback<GeometryChangedEvent, VisualElement>(ResizeElement, boardElement);
+
+        int _count = 0;
+        foreach (var _child in bottomRoot.Children())
+        {
+            blockPickSlots[_count] = _child;
+            _count++;
+        }
+        // Debug.Log(blockPickSlots.Length);
     }
     private void CreateBoard(int _size)
     {
@@ -104,6 +158,15 @@ public class InGameUI : MonoBehaviour
                 _newSlot.RegisterCallback<MouseEnterEvent, TileElement>(OnMouseEnterSlot, _newSlot);
                 _newSlot.RegisterCallback<MouseLeaveEvent>(OnMouseLeave);
                 _newSlot.RegisterCallback<TransitionStartEvent, string>(OnStartEvent, "Destroy");
+                _newSlot.RegisterCallback<PointerDownEvent>(_event =>
+                {
+                    Debug.Log("PointerDown");
+                });
+                _newSlot.RegisterCallback<DragEnterEvent>(_event =>
+                {
+                    Debug.Log("Drag");
+                });
+                _newSlot.focusable = true;
 
                 _newSlot.style.width = _newSlotSize;
                 _newSlot.style.height = _newSlotSize;
@@ -208,8 +271,19 @@ public class InGameUI : MonoBehaviour
         }
 
     }
-
-
+    private void ResizeElement(GeometryChangedEvent evt, VisualElement targetElement)
+    {
+        // float targetWidth = 720;
+        // // float targetHeight = targetWidth / AspectRatio;
+        // targetElement.style.width = targetWidth;
+        // targetElement.style.height = targetWidth;
+        Debug.Log(targetElement.layout);
+    }
+    private BlockElement CreateBlockElement(string _defaultClass, BlockInfo _blockInfo)
+    {
+        BlockElement _newBlockElement = new BlockElement(_defaultClass, _blockInfo);
+        return _newBlockElement;
+    }
 
     #region Debug Func
     private void DisableDebugObjs()
@@ -227,7 +301,18 @@ public class InGameUI : MonoBehaviour
             debugs[i].visible = true;
             return debugs[i];
         }
-        return null;
+        return CreateDebugElement();
+    }
+    private VisualElement CreateDebugElement()
+    {
+        VisualElement _newDebugObj = new VisualElement();
+        _newDebugObj.AddToClassList("debug-block");
+        _newDebugObj.pickingMode = PickingMode.Ignore;
+        debugs.Add(_newDebugObj);
+        rootElement.Add(_newDebugObj);
+        // _newDebugObj.MarkDirtyRepaint();
+
+        return _newDebugObj;
     }
 
     #endregion

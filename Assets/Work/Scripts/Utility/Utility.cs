@@ -18,6 +18,10 @@ namespace Utility
 
             return _position + _halfSize;
         }
+        public static Vector2 GetLocalPosition(this VisualElement value)
+        {
+            return new Vector2(value.layout.width * 0.5f, value.layout.height * 0.5f);
+        }
         public static void Translate(this VisualElement value, Vector2 _pos)
         {
             value.style.left = _pos.x;
@@ -35,6 +39,20 @@ namespace Utility
             float scale = aspectRatio / referenceAspectRatio;
 
             return scale;
+        }
+
+        public static T CloneVisualElement<T>(this VisualElement value) where T : VisualElement, new()
+        {
+            T _result = new T();
+            var _classes = value.GetClasses();
+
+            if (_classes != null)
+            {
+                foreach (var _className in _classes)
+                    _result.AddToClassList(_className);
+            }
+
+            return _result;
         }
     }
 

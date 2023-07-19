@@ -5,10 +5,15 @@ using UnityEngine;
 public class ElementsPool
 {
     private Dictionary<string, Queue<VisualElement>> poolDict;
+    public ElementsPool()
+    {
+        poolDict = new Dictionary<string, Queue<VisualElement>>();
+    }
     public void AddPool(VisualElement _elemnet, string _key, int _poolingCount)
     {
-        if (poolDict.ContainsKey(_key))
-            Debug.LogError("이미 존재하는 풀링 ID 입니다.");
+        if (poolDict == null) poolDict = new Dictionary<string, Queue<VisualElement>>();
+        if (poolDict.ContainsKey(_key)) Debug.LogError("이미 존재하는 풀링 ID 입니다.");
+
 
         Queue<VisualElement> _elementPool = new Queue<VisualElement>();
         for (int i = 0; i < _poolingCount; i++)
@@ -19,19 +24,40 @@ public class ElementsPool
             _elementPool.Enqueue(_newElement);
         }
     }
-    public void AddPool(string _className, string _key, int _poolingCount)
+    public void AddPool<T>(string _key, int _poolingCount,VisualElement _root) where T : VisualElement, new()
     {
-        if (poolDict.ContainsKey(_key))
-            Debug.LogError("이미 존재하는 풀링 ID 입니다.");
+        if (poolDict == null) poolDict = new Dictionary<string, Queue<VisualElement>>();
+        if (poolDict.ContainsKey(_key)) Debug.LogError("이미 존재하는 풀링 ID 입니다.");
+
 
         Queue<VisualElement> _elementPool = new Queue<VisualElement>();
         for (int i = 0; i < _poolingCount; i++)
         {
-            VisualElement _newElement = new VisualElement();
-            _newElement.AddToClassList(_className);
-
+            T _newElement = new T();
             _elementPool.Enqueue(_newElement);
+            _newElement.visible = false;
+            _root.Add(_newElement);
         }
+        poolDict.Add(_key, _elementPool);
+    }
+    public T GetParts<T>(string _key) where T : VisualElement
+    {
+        if (poolDict == null) return null;
+
+        if (!poolDict.ContainsKey(_key)) return null;
+        if (poolDict[_key].Count <= 0) return null;
+
+        T _result = poolDict[_key].Dequeue() as T;
+        if(!_result.visible) _result.visible = true;
+
+        return _result;
+    }
+    public void ReturnParts<T>(string _key,T _element) where T : VisualElement
+    {
+        if (!poolDict.ContainsKey(_key)) return;
+
+        _element.visible = false;
+        poolDict[_key].Enqueue(_element);
     }
 
     // public VisualElement GetElement(string _key)
