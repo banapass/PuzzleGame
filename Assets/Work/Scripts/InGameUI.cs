@@ -15,7 +15,7 @@ public class InGameUI : MonoBehaviour
     private VisualElement rootElement; // 최상단 VisualElement
     private VisualElement boardElement;
     private VisualElement bottomRoot;
-    private VisualElement[] blockPickSlots;
+    private BlockElement[] blockPickSlots;
     private TileElement highlightTile = null; // 가장 최근 마우스가 들어온 타일
     private TileElement[,] tiles; // 보드 타일맵
     private BlockElement selectedBlock; // 선택된 블록
@@ -39,29 +39,43 @@ public class InGameUI : MonoBehaviour
         StartCoroutine(NextFrame(DebugInit));
 
     }
-    private IEnumerator NextFrame(Action _callBack)
+    private void BindVariable()
     {
-        yield return new WaitForEndOfFrame();
-        _callBack();
+        doc = GetComponent<UIDocument>();
+        rootElement = doc.rootVisualElement;
+        rootElement.RegisterCallback<MouseMoveEvent>(OnPickSlotMouseMove);
+        rootElement.RegisterCallback<MouseUpEvent>(OnPickSlotMouseUp);
+        boardElement = rootElement.Q("board");
+        bottomRoot = rootElement.Q("bottom");
+        InitBottomBlockSlots();
+        // Debug.Log(blockPickSlots.Length);
     }
-    private IEnumerator NextFrame<T>(Action<T> _callBack, T _param) where T : struct
+    private void InitBottomBlockSlots()
     {
-        yield return new WaitForEndOfFrame();
+        blockPickSlots = new BlockElement[bottomRoot.childCount];
 
-        _callBack(_param);
+        for (int i = 0; i < Constants.BLOCK_PICKSLOT_COUNT; i++)
+        {
+            BlockElement _newPickSlot = new BlockElement();
+            _newPickSlot.AddToClassList(Constants.BLOCK_PICK);
+
+            _newPickSlot.ChangeBlockInfo(TableManager.Instance.BlockInfos[0]);
+            _newPickSlot.RegisterCallback<MouseDownEvent>(OnPickSlotMouseDown);
+
+            bottomRoot.Add(_newPickSlot);
+            blockPickSlots[i] = _newPickSlot;
+        }
     }
+
     private void DebugInit()
     {
-        // 디버깅 용
-        selectedBlock = new BlockElement("block", TableManager.Instance.BlockInfos[0]);
-        rootElement.Add(selectedBlock.CloneVisualElement<BlockElement>());
+        // selectedBlock = new BlockElement("block", TableManager.Instance.BlockInfos[0]);
+        // selectedBlock.CloneVisualElement<BlockElement>()
         // rootElement.Add();
-        //DisableDebugObjs();
-        // BlockBuild();
-        // 디버깅 용
+
         for (int i = 0; i < blockPickSlots.Length; i++)
         {
-            BlockBuild(blockPickSlots[i], selectedBlock);
+            BlockBuild(blockPickSlots[i]);
         }
         CreateBoard(5);
     }
@@ -82,11 +96,33 @@ public class InGameUI : MonoBehaviour
 
         }
     }
+    private void BlockBuild(BlockElement _blockElement)
+    {
+        Vector2 _centerPos = _blockElement.GetLocalPosition();
+        Vector2 _blockCount = _blockElement.InBlockInfo.GetSize();
+
+        for (int i = 0; i < _blockElement.BatchCoord.Length; i++)
+        {
+            BlockDummyElement _block = elementsPool.GetParts<BlockDummyElement>(Constants.BLOCK_KEY);
+            Vector2 _blockSize = new Vector2(_blockElement.layout.width / _blockCount.x, _blockElement.layout.height / _blockCount.y);
+
+            _blockElement.childElement.Add(_block);
+            _block.style.width = _blockSize.x;
+            _block.style.height = _blockSize.y;
+
+            float _nextX = _blockElement.BatchCoord[i].x * _blockSize.x;
+            float _nextY = _blockElement.BatchCoord[i].y * _blockSize.y;
+            Vector2 _calculatedPos = _centerPos + new Vector2(_nextX, _nextY);
+
+            _block.style.left = _calculatedPos.x;
+            _block.style.top = _calculatedPos.y;
+            _block.BlockBatch(TableManager.Instance.BlockInfos[0]);
+        }
+    }
     private void BlockBuild(VisualElement _center, BlockElement _blockElement)
     {
         Vector2 _centerPos = _center.GetLocalPosition();
         Vector2 _blockCount = _blockElement.InBlockInfo.GetSize();
-        //_blockElement.InBlockInfo.GetSize();
 
         for (int i = 0; i < _blockElement.BatchCoord.Length; i++)
         {
@@ -94,54 +130,38 @@ public class InGameUI : MonoBehaviour
             Vector2 _blockSize = new Vector2(_center.layout.width / _blockCount.x, _center.layout.height / _blockCount.y);
 
             _center.Add(_block);
-            _block.style.width = _blockSize.x;//_center.layout.width / _blockSize.x;//new StyleLength(new Length(, LengthUnit.Percent));
-            _block.style.height = _blockSize.y;//_center.layout.height / _blockSize.y;//new StyleLength(new Length(, LengthUnit.Percent));
+            _block.style.width = _blockSize.x;
+            _block.style.height = _blockSize.y;
 
+            float _nextX = _blockElement.BatchCoord[i].x * _blockSize.x;
+            float _nextY = _blockElement.BatchCoord[i].y * _blockSize.y;
+            Vector2 _calculatedPos = _centerPos + new Vector2(_nextX, _nextY);
 
-            if (float.IsNaN(_block.layout.width))
-            {
-                StartCoroutine(NextFrame<int>(_index =>
-                {
-                    float _nextX = _blockElement.BatchCoord[_index].x * _blockSize.x;// _block.layout.width;
-                    float _nextY = _blockElement.BatchCoord[_index].y * _blockSize.y;//_block.layout.height;
-                    Vector2 _calculatedPos = _centerPos + new Vector2(_nextX, _nextY);
+            _block.style.left = _calculatedPos.x;
+            _block.style.top = _calculatedPos.y;
+            _block.BlockBatch(TableManager.Instance.BlockInfos[0]);
 
-                    _block.style.left = _calculatedPos.x;
-                    _block.style.top = _calculatedPos.y;
-                    _block.BlockBatch(TableManager.Instance.BlockInfos[0]);
-                }, i));
-            }
-            else
-            {
-                Debug.Log("IN Un Nan");
-                float _nextX = _blockElement.BatchCoord[i].x * _blockSize.x;
-                float _nextY = _blockElement.BatchCoord[i].y * _blockSize.y;
-                Vector2 _calculatedPos = _centerPos + new Vector2(_nextX, _nextY);
+            // if (float.IsNaN(_block.layout.width))
+            // {
+            //     StartCoroutine(NextFrame<int>(_index =>
+            //     {
+            //         float _nextX = _blockElement.BatchCoord[_index].x * _blockSize.x;
+            //         float _nextY = _blockElement.BatchCoord[_index].y * _blockSize.y;
+            //         Vector2 _calculatedPos = _centerPos + new Vector2(_nextX, _nextY);
 
-                _block.style.left = _calculatedPos.x;
-                _block.style.top = _calculatedPos.y;
-                _block.BlockBatch(TableManager.Instance.BlockInfos[0]);
-            }
+            //         _block.style.left = _calculatedPos.x;
+            //         _block.style.top = _calculatedPos.y;
+            //         _block.BlockBatch(TableManager.Instance.BlockInfos[0]);
+            //     }, i));
+            // }
+            // else
+            // {
+
+            // }
         }
     }
-    private void BindVariable()
-    {
-        doc = GetComponent<UIDocument>();
-        rootElement = doc.rootVisualElement;
-        boardElement = rootElement.Q("board");
-        bottomRoot = rootElement.Q("bottom");
-        blockPickSlots = new VisualElement[bottomRoot.childCount];
 
-        // boardElement.RegisterCallback<GeometryChangedEvent, VisualElement>(ResizeElement, boardElement);
 
-        int _count = 0;
-        foreach (var _child in bottomRoot.Children())
-        {
-            blockPickSlots[_count] = _child;
-            _count++;
-        }
-        // Debug.Log(blockPickSlots.Length);
-    }
     private void CreateBoard(int _size)
     {
         StyleLength _newSlotSize = new StyleLength(new Length(100 / _size, LengthUnit.Percent));
@@ -155,22 +175,10 @@ public class InGameUI : MonoBehaviour
 
                 TileElement _newSlot = new TileElement("block-slot", _newTile);
 
-                _newSlot.RegisterCallback<MouseEnterEvent, TileElement>(OnMouseEnterSlot, _newSlot);
-                _newSlot.RegisterCallback<MouseLeaveEvent>(OnMouseLeave);
-                _newSlot.RegisterCallback<TransitionStartEvent, string>(OnStartEvent, "Destroy");
-                _newSlot.RegisterCallback<PointerDownEvent>(_event =>
-                {
-                    Debug.Log("PointerDown");
-                });
-                _newSlot.RegisterCallback<DragEnterEvent>(_event =>
-                {
-                    Debug.Log("Drag");
-                });
-                _newSlot.focusable = true;
+                RegisterEventTile(_newSlot);
 
                 _newSlot.style.width = _newSlotSize;
                 _newSlot.style.height = _newSlotSize;
-
 
                 tiles[y, x] = _newSlot;
                 boardElement.Add(_newSlot);
@@ -183,6 +191,17 @@ public class InGameUI : MonoBehaviour
         _newTile.SetCoord(x, y);
 
         return _newTile;
+    }
+    private BlockElement CreateBlockElement(string _defaultClass, BlockInfo _blockInfo)
+    {
+        BlockElement _newBlockElement = new BlockElement(_defaultClass, _blockInfo);
+        return _newBlockElement;
+    }
+    private void RegisterEventTile(TileElement _newElement)
+    {
+        _newElement.RegisterCallback<MouseEnterEvent, TileElement>(OnMouseEnterSlot, _newElement);
+        _newElement.RegisterCallback<MouseLeaveEvent>(OnMouseLeave);
+        _newElement.RegisterCallback<TransitionStartEvent, string>(OnStartEvent, "Destroy");
     }
 
     private void OnStartEvent(TransitionStartEvent evt, string _className)
@@ -279,11 +298,7 @@ public class InGameUI : MonoBehaviour
         // targetElement.style.height = targetWidth;
         Debug.Log(targetElement.layout);
     }
-    private BlockElement CreateBlockElement(string _defaultClass, BlockInfo _blockInfo)
-    {
-        BlockElement _newBlockElement = new BlockElement(_defaultClass, _blockInfo);
-        return _newBlockElement;
-    }
+
 
     #region Debug Func
     private void DisableDebugObjs()
@@ -316,5 +331,69 @@ public class InGameUI : MonoBehaviour
     }
 
     #endregion
+    private IEnumerator NextFrame(Action _callBack)
+    {
+        yield return new WaitForEndOfFrame();
+        _callBack();
+    }
+    private IEnumerator NextFrame<T>(Action<T> _callBack, T _param) where T : struct
+    {
+        yield return new WaitForEndOfFrame();
 
+        _callBack(_param);
+    }
+
+    #region Event
+    private void OnPickSlotMouseDown(MouseDownEvent _evt)
+    {
+        if (selectedBlock != null)
+        {
+
+        }
+        else
+        {
+            selectedBlock = _evt.target as BlockElement;
+
+            // VisualElement _dragSlot = selectedBlock.childElement;
+            // Vector2 _newPos = _evt.mousePosition + Constants.DRAG_OFFSET;
+            // _dragSlot.style.left = _newPos.x;
+            // _dragSlot.style.top = _newPos.y;
+            selectedBlock.DragStart(_evt);
+            rootElement.Add(selectedBlock.childElement);
+            BlockBuild(selectedBlock.childElement, selectedBlock);
+
+        }
+    }
+    private void OnPickSlotMouseUp(MouseUpEvent _evt)
+    {
+        if (selectedBlock == null) return;
+        if ((_evt.target as TileElement) != null)
+        {
+            Debug.Log("ININININI");
+        }
+
+        selectedBlock.DragEnd();
+        selectedBlock = null;
+
+        _evt.StopPropagation();
+
+        // VisualElement _dragSlot = selectedBlock.childElement;
+        // selectedBlock.Add(_dragSlot);
+        // _dragSlot.style.position = new StyleEnum<Position>(Position.Relative);
+        // _dragSlot.style.left = 0;
+        // _dragSlot.style.top = 0;
+    }
+    private void OnPickSlotMouseMove(MouseMoveEvent _evt)
+    {
+        if (selectedBlock == null) return;
+
+        selectedBlock.Dragging(_evt);
+        _evt.StopPropagation();
+
+        // VisualElement _dragSlot = selectedBlock.childElement;
+        // Vector2 _newPos = _evt.mousePosition - Constants.DRAG_OFFSET;
+        // _dragSlot.style.left = _newPos.x;
+        // _dragSlot.style.top = _newPos.y;
+    }
+    #endregion
 }

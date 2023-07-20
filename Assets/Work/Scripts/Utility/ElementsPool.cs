@@ -24,7 +24,7 @@ public class ElementsPool
             _elementPool.Enqueue(_newElement);
         }
     }
-    public void AddPool<T>(string _key, int _poolingCount,VisualElement _root) where T : VisualElement, new()
+    public void AddPool<T>(string _key, int _poolingCount, VisualElement _root) where T : VisualElement, new()
     {
         if (poolDict == null) poolDict = new Dictionary<string, Queue<VisualElement>>();
         if (poolDict.ContainsKey(_key)) Debug.LogError("이미 존재하는 풀링 ID 입니다.");
@@ -48,11 +48,11 @@ public class ElementsPool
         if (poolDict[_key].Count <= 0) return null;
 
         T _result = poolDict[_key].Dequeue() as T;
-        if(!_result.visible) _result.visible = true;
+        if (!_result.visible) _result.visible = true;
 
         return _result;
     }
-    public void ReturnParts<T>(string _key,T _element) where T : VisualElement
+    public void ReturnParts<T>(string _key, T _element) where T : VisualElement
     {
         if (!poolDict.ContainsKey(_key)) return;
 

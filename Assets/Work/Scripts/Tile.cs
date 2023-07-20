@@ -7,13 +7,13 @@ using UnityEngine.UIElements;
 public class Tile
 {
     public Coord TileCoord { get; private set; }
-    public BlockElement InBlock { get; private set; }
+    public BlockDummyElement InBlock { get; private set; }
 
     public void SetCoord(int _x, int _y)
     {
         TileCoord = new Coord(_x, _y);
     }
-    public void SetBlock(BlockElement _block)
+    public void SetBlock(BlockDummyElement _block)
     {
         InBlock = _block;
     }
