@@ -8,6 +8,7 @@ public class Tile
 {
     public Coord TileCoord { get; private set; }
     public BlockDummyElement InBlock { get; private set; }
+    public bool IsBatched { get { return InBlock != null; } }
 
     public void SetCoord(int _x, int _y)
     {
