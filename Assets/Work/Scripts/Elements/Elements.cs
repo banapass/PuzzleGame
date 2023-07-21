@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.UIElements;
+using DG.Tweening;
 
 public class TileElement : VisualElement
 {
@@ -74,6 +75,7 @@ public class BlockElement : VisualElement
 
 public class BlockDummyElement : VisualElement
 {
+    //public static event Action<string, VisualElement> OnDestryed;
     public bool IsBatched { get { return this.ClassListContains(Constants.BLOCK_BATCH); } }
     public BlockDummyElement()
     {
@@ -85,7 +87,14 @@ public class BlockDummyElement : VisualElement
     {
         if (IsBatched) return;
         SetSprite(_blockInfo.BlockIMG);
-        this.AddToClassList(Constants.BLOCK_BATCH);
+        //this.AddToClassList(Constants.BLOCK_BATCH);
+        style.scale = Vector2.zero;
+        DOTween.To(() => style.scale.value.value, x => style.scale = x, Vector2.one, 0.5f)
+            .SetEase(Ease.OutBounce)
+            .OnComplete(() =>
+            {
+                Debug.Log("ON Completed");
+            });
     }
     public void DestroyBlock()
     {

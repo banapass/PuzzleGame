@@ -21,4 +21,9 @@ public class TableManager : Singleton<TableManager>
         BlockInfos = JsonWrapper.FromJson<BlockInfo>(_blockData.text);
     }
 
+    public BlockInfo GetRandomBlockInfo()
+    {
+        return BlockInfos[Random.Range(0, BlockInfos.Length)];
+    }
+
 }

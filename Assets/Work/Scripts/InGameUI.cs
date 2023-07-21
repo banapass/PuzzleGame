@@ -68,12 +68,28 @@ public class InGameUI : MonoBehaviour
     {
         for (int i = 0; i < blockPickSlots.Length; i++)
         {
-            BlockBuild(blockPickSlots[i]);
+            BlockBuild(blockPickSlots[i], TableManager.Instance.GetRandomBlockInfo());
         }
         CreateBoard(5);
     }
-    
-    private void BlockBuild(BlockElement _blockElement)
+    private void BlocksBatch(TileElement _tile, BlockInfo _blockInfo)
+    {
+        for (int i = 0; i < _blockInfo.BlockCoord.Length; i++)
+        {
+            BlockDummyElement _batchBlock = elementsPool.GetParts<BlockDummyElement>(Constants.BLOCK_KEY);
+            int _nextX = _tile.InTile.TileCoord.x + _blockInfo.BlockCoord[i].x;
+            int _nextY = _tile.InTile.TileCoord.y + _blockInfo.BlockCoord[i].y;
+
+            rootElement.Add(_batchBlock);
+            Vector2 _calculatePos = _tile.GetCenterPosition() + _blockInfo.BlockCoord[i] * _tile.layout.size;
+            _batchBlock.style.width = _tile.layout.width;
+            _batchBlock.style.height = _tile.layout.height;
+            _batchBlock.Translate(_calculatePos);
+
+            tiles[_nextY, _nextX].InTile.SetBlock(_batchBlock, _blockInfo);
+        }
+    }
+    private void BlockBuild(BlockElement _blockElement,BlockInfo _blockInfo)
     {
         Vector2 _centerPos = _blockElement.GetLocalPosition();
         Vector2 _blockCount = _blockElement.InBlockInfo.GetSize();
@@ -93,7 +109,7 @@ public class InGameUI : MonoBehaviour
 
             _block.style.left = _calculatedPos.x;
             _block.style.top = _calculatedPos.y;
-            _block.BlockBatch(TableManager.Instance.BlockInfos[0]);
+            _block.BlockBatch(_blockInfo);
         }
     }
     private void BlockBuild(VisualElement _center, BlockElement _blockElement)
@@ -242,7 +258,6 @@ public class InGameUI : MonoBehaviour
         {
             DisableDebugObjs();
         }
-
     }
 
 
@@ -330,11 +345,16 @@ public class InGameUI : MonoBehaviour
 
         TileElement _tileElement = _evt.target as TileElement;
         bool _isBatchSuccess = IsCanBatch(_tileElement,selectedBlock.InBlockInfo);
-
-        Debug.Log($"Is Can Batch : {_isBatchSuccess}");
+        if (_isBatchSuccess)
+        {
+            BlocksBatch(_tileElement, selectedBlock.InBlockInfo);
+            BlockBuild(selectedBlock,TableManager.Instance.GetRandomBlockInfo());
+        }
 
         selectedBlock.DragEnd();
         selectedBlock = null;
+
+
 
         _evt.StopPropagation();
     }

@@ -14,8 +14,19 @@ public class Tile
     {
         TileCoord = new Coord(_x, _y);
     }
-    public void SetBlock(BlockDummyElement _block)
+    public void SetBlock(BlockDummyElement _block,BlockInfo _blockInfo)
     {
+        if (_block == null) return;
+
         InBlock = _block;
+        InBlock.BlockBatch(_blockInfo);
+    }
+    public void RemoveBlock()
+    {
+        if (InBlock != null)
+        {
+            InBlock.DestroyBlock();
+            InBlock = null;
+        }
     }
 }

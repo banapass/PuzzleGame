@@ -54,11 +54,9 @@
     scale: 0 0;
     transition-property: scale;
     transition-timing-function: ease-in-bounce;
-    transition-duration: 0.5s;
-    width: 100px;
-    height: 100px;
+    transition-duration: 0s;
     translate: -50% -50%;
-    transition-delay: 0.1s;
+    transition-delay: 0s;
 }
 
 .block-batch {
@@ -69,7 +67,7 @@
     transition-duration: 0.5s;
     width: 100px;
     height: 100px;
-    transition-delay: 0.1s;
+    transition-delay: 0s;
 }
 
 .block-destroy {

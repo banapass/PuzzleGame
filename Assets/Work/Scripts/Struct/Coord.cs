@@ -1,3 +1,5 @@
+using UnityEngine;
+
 [System.Serializable]
 public struct Coord
 {
@@ -35,5 +37,13 @@ public struct Coord
             }
             return _result;
         }
+    }
+    public static Vector2 operator *(Coord coord, Vector2 vector)
+    {
+        return new Vector2(coord.x * vector.x, coord.y * vector.y);
+    }
+    public static Vector2 operator *(Vector2 vector, Coord coord)
+    {
+        return coord * vector;
     }
 }
