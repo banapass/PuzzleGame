@@ -2,6 +2,8 @@ using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 using DG.Tweening;
+using System.Collections.Generic;
+using System.Linq;
 
 public class TileElement : VisualElement
 {
@@ -71,12 +73,32 @@ public class BlockElement : VisualElement
         childElement.style.left = _newPosition.x;
         childElement.style.top = _newPosition.y;
     }
+
+    internal void ReturnPoolChildenElements(ElementsPool _pool)
+    {
+        var _children = childElement.Children().ToList();
+        if (_children == null) return;
+
+        foreach (var _block in _children)
+        {
+            BlockDummyElement _castBlock = _block as BlockDummyElement;
+
+            if (_castBlock == null)
+            {
+                Debug.Log($"Cast Block IS Null");
+            }
+            else
+            {
+                _pool.ReturnParts<BlockDummyElement>(Constants.BLOCK_KEY, _castBlock);
+            }
+        }
+
+    }
 }
 
 public class BlockDummyElement : VisualElement
 {
-    //public static event Action<string, VisualElement> OnDestryed;
-    public bool IsBatched { get { return this.ClassListContains(Constants.BLOCK_BATCH); } }
+    public static event Action<BlockDummyElement> OnDestroyedBlock = null;
     public BlockDummyElement()
     {
         this.AddToClassList(Constants.BLOCK_NORMAL);
@@ -85,21 +107,17 @@ public class BlockDummyElement : VisualElement
 
     public void BlockBatch(BlockInfo _blockInfo)
     {
-        if (IsBatched) return;
         SetSprite(_blockInfo.BlockIMG);
-        //this.AddToClassList(Constants.BLOCK_BATCH);
         style.scale = Vector2.zero;
         DOTween.To(() => style.scale.value.value, x => style.scale = x, Vector2.one, 0.5f)
-            .SetEase(Ease.OutBounce)
-            .OnComplete(() =>
-            {
-                Debug.Log("ON Completed");
-            });
+            .SetEase(Ease.OutBounce);
     }
     public void DestroyBlock()
     {
-        if (!IsBatched) return;
-        this.RemoveFromClassList(Constants.BLOCK_BATCH);
+        style.scale = Vector2.one;
+        DOTween.To(() => style.scale.value.value, x => style.scale = x, Vector2.zero, 0.5f)
+            .SetEase(Ease.InBounce)
+            .OnComplete(() => OnDestroyedBlock?.Invoke(this));
     }
     public void SetSprite(string _spriteName)
     {

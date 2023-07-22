@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Analytics;
 using UnityEngine.UIElements;
 using Utility;
 
@@ -27,24 +28,40 @@ public class InGameUI : MonoBehaviour
     #endregion
 
     private ElementsPool elementsPool;
+    private List<Tile> destroyTargets;
 
     public void Init()
-    { 
+    {
         BindVariable();
         elementsPool = new ElementsPool();
         elementsPool.AddPool<BlockDummyElement>(Constants.BLOCK_KEY, 60, rootElement);
 
+
         StartCoroutine(NextFrame(DebugInit));
 
     }
+    private void OnEnable()
+    {
+        BlockDummyElement.OnDestroyedBlock += OnDestroyedBlock;
+    }
+    private void OnDisable()
+    {
+        BlockDummyElement.OnDestroyedBlock -= OnDestroyedBlock;
+    }
+    private void OnDestroyedBlock(BlockDummyElement _destroyedBlock)
+    => elementsPool.ReturnParts<BlockDummyElement>(Constants.BLOCK_KEY, _destroyedBlock);
+
     private void BindVariable()
     {
+
         doc = GetComponent<UIDocument>();
         rootElement = doc.rootVisualElement;
         rootElement.RegisterCallback<MouseMoveEvent>(OnPickSlotMouseMove);
         rootElement.RegisterCallback<MouseUpEvent>(OnPickSlotMouseUp);
         boardElement = rootElement.Q("board");
         bottomRoot = rootElement.Q("bottom");
+
+        destroyTargets = new List<Tile>();
         InitBottomBlockSlots();
     }
     private void InitBottomBlockSlots()
@@ -56,7 +73,7 @@ public class InGameUI : MonoBehaviour
             BlockElement _newPickSlot = new BlockElement();
             _newPickSlot.AddToClassList(Constants.BLOCK_PICK);
 
-            _newPickSlot.ChangeBlockInfo(TableManager.Instance.BlockInfos[0]);
+            _newPickSlot.ChangeBlockInfo(TableManager.Instance.GetRandomBlockInfo());
             _newPickSlot.RegisterCallback<MouseDownEvent>(OnPickSlotMouseDown);
 
             bottomRoot.Add(_newPickSlot);
@@ -80,17 +97,77 @@ public class InGameUI : MonoBehaviour
             int _nextX = _tile.InTile.TileCoord.x + _blockInfo.BlockCoord[i].x;
             int _nextY = _tile.InTile.TileCoord.y + _blockInfo.BlockCoord[i].y;
 
+            TileElement _inTile = tiles[_nextY, _nextX];
             rootElement.Add(_batchBlock);
-            Vector2 _calculatePos = _tile.GetCenterPosition() + _blockInfo.BlockCoord[i] * _tile.layout.size;
+
+            Vector2 _newPos = _inTile.GetCenterPosition();//_tile.GetCenterPosition() + _blockInfo.BlockCoord[i] * _tile.layout.size;
             _batchBlock.style.width = _tile.layout.width;
             _batchBlock.style.height = _tile.layout.height;
-            _batchBlock.Translate(_calculatePos);
+            _batchBlock.Translate(_newPos);
 
             tiles[_nextY, _nextX].InTile.SetBlock(_batchBlock, _blockInfo);
         }
     }
-    private void BlockBuild(BlockElement _blockElement,BlockInfo _blockInfo)
+    private bool CheckDestroyBlock()
     {
+        if (destroyTargets == null) destroyTargets = new List<Tile>();
+
+        destroyTargets.Clear();
+
+        for (int y = 0; y < tiles.GetLength(0); y++)
+        {
+            bool _isHorizontal = true;
+            bool _isVertical = true;
+
+            for (int x = 0; x < tiles.GetLength(1); x++)
+            {
+                _isHorizontal &= tiles[y, x].InTile.IsBatched;
+                _isVertical &= tiles[x, y].InTile.IsBatched;
+            }
+
+            if (_isHorizontal) AddHorizontalBlocks(y, destroyTargets);
+            if (_isVertical) AddVerticalBlocks(y, destroyTargets);
+        }
+
+        return destroyTargets.Count > 0;
+    }
+    private void DestroyTargetBlocks()
+    {
+        if (destroyTargets == null) return;
+        if (destroyTargets.Count == 0) return;
+
+        for (int i = 0; i < destroyTargets.Count; i++)
+            destroyTargets[i].RemoveBlock();
+    }
+    private void AddHorizontalBlocks(int _y, List<Tile> _blockList)
+    {
+        if (_blockList == null) throw new NullReferenceException("BlockList가 Null 입니다 : 매게변수 값 확인 필요");
+        int _length = tiles.GetLength(0);
+
+        for (int x = 0; x < _length; x++)
+        {
+            Tile _target = tiles[_y, x].InTile;
+            if (_blockList.Contains(_target)) continue;
+            _blockList.Add(_target);
+        }
+    }
+    private void AddVerticalBlocks(int _x, List<Tile> _blockList)
+    {
+        if (_blockList == null) throw new NullReferenceException("BlockList가 Null 입니다 : 매게변수 값 확인 필요");
+
+        int _length = tiles.GetLength(0);
+
+        for (int y = 0; y < _length; y++)
+        {
+            Tile _target = tiles[y, _x].InTile;
+            if (_blockList.Contains(_target)) continue;
+            _blockList.Add(_target);
+        }
+    }
+    private void BlockBuild(BlockElement _blockElement, BlockInfo _blockInfo)
+    {
+        _blockElement.ReturnPoolChildenElements(elementsPool);
+
         Vector2 _centerPos = _blockElement.GetLocalPosition();
         Vector2 _blockCount = _blockElement.InBlockInfo.GetSize();
 
@@ -105,10 +182,12 @@ public class InGameUI : MonoBehaviour
 
             float _nextX = _blockElement.BatchCoord[i].x * _blockSize.x;
             float _nextY = _blockElement.BatchCoord[i].y * _blockSize.y;
+
+            Vector2 _nextPos = new Vector2(_nextX, _nextY);
             Vector2 _calculatedPos = _centerPos + new Vector2(_nextX, _nextY);
 
             _block.style.left = _calculatedPos.x;
-            _block.style.top = _calculatedPos.y;
+            _block.style.top = _calculatedPos.y > 0 ? _centerPos.y - _nextPos.y : _centerPos.y + _nextPos.y;
             _block.BlockBatch(_blockInfo);
         }
     }
@@ -205,8 +284,8 @@ public class InGameUI : MonoBehaviour
     {
         DisableDebugObjs();
     }
-    
-    private bool IsCanBatch(TileElement _tile , BlockInfo _batchBlock)
+
+    private bool IsCanBatch(TileElement _tile, BlockInfo _batchBlock)
     {
         if (_tile == null) return false;
 
@@ -344,11 +423,14 @@ public class InGameUI : MonoBehaviour
         if (selectedBlock == null) return;
 
         TileElement _tileElement = _evt.target as TileElement;
-        bool _isBatchSuccess = IsCanBatch(_tileElement,selectedBlock.InBlockInfo);
+        bool _isBatchSuccess = IsCanBatch(_tileElement, selectedBlock.InBlockInfo);
         if (_isBatchSuccess)
         {
             BlocksBatch(_tileElement, selectedBlock.InBlockInfo);
-            BlockBuild(selectedBlock,TableManager.Instance.GetRandomBlockInfo());
+            BlockBuild(selectedBlock, TableManager.Instance.GetRandomBlockInfo());
+            bool _isNeedDestroy = CheckDestroyBlock();
+            if (_isNeedDestroy)
+                DestroyTargetBlocks();
         }
 
         selectedBlock.DragEnd();
