@@ -1,6 +1,6 @@
 [
     {
-        "BlockIMG": "redBlock_1",
+        "BlockIMG": "block_red",
         "BlockCoord": [
             {
                 "x": 0,
@@ -25,7 +25,7 @@
         ]
     },
     {
-        "BlockIMG": "redBlock_1",
+        "BlockIMG": "block_blue",
         "BlockCoord": [
             {
                 "x": 0,
@@ -50,7 +50,7 @@
         ]
     },
     {
-        "BlockIMG": "redBlock_1",
+        "BlockIMG": "block_purple",
         "BlockCoord": [
             {
                 "x": 0,
@@ -67,7 +67,7 @@
         ]
     },
     {
-        "BlockIMG": "redBlock_1",
+        "BlockIMG": "block_red",
         "BlockCoord": [
             {
                 "x": 0,
@@ -80,7 +80,7 @@
         ]
     },
     {
-        "BlockIMG": "redBlock_1",
+        "BlockIMG": "block_green",
         "BlockCoord": [
             {
                 "x": 0,

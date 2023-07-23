@@ -2,14 +2,6 @@
     flex-grow: 1;
     background-color: rgba(0, 0, 0, 0);
     background-image: url('project://database/Assets/Work/Art/Block/blockSlot.png?fileID=21300000&guid=a8111f37aef623448ba47da7cf4766f3&type=3#blockSlot');
-    border-top-left-radius: 25px;
-    border-bottom-left-radius: 25px;
-    border-top-right-radius: 25px;
-    border-bottom-right-radius: 25px;
-    padding-left: 10px;
-    padding-right: 10px;
-    padding-top: 10px;
-    padding-bottom: 10px;
 }
 
 .board-area {

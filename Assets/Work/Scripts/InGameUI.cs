@@ -87,7 +87,7 @@ public class InGameUI : MonoBehaviour
         {
             BlockBuild(blockPickSlots[i], TableManager.Instance.GetRandomBlockInfo());
         }
-        CreateBoard(5);
+        CreateBoard(8);
     }
     private void BlocksBatch(TileElement _tile, BlockInfo _blockInfo)
     {
@@ -167,6 +167,7 @@ public class InGameUI : MonoBehaviour
     private void BlockBuild(BlockElement _blockElement, BlockInfo _blockInfo)
     {
         _blockElement.ReturnPoolChildenElements(elementsPool);
+        _blockElement.ChangeBlockInfo(_blockInfo);
 
         Vector2 _centerPos = _blockElement.GetLocalPosition();
         Vector2 _blockCount = _blockElement.InBlockInfo.GetSize();
@@ -180,6 +181,7 @@ public class InGameUI : MonoBehaviour
             _block.style.width = _blockSize.x;
             _block.style.height = _blockSize.y;
 
+
             float _nextX = _blockElement.BatchCoord[i].x * _blockSize.x;
             float _nextY = _blockElement.BatchCoord[i].y * _blockSize.y;
 
@@ -188,6 +190,7 @@ public class InGameUI : MonoBehaviour
 
             _block.style.left = _calculatedPos.x;
             _block.style.top = _calculatedPos.y > 0 ? _centerPos.y - _nextPos.y : _centerPos.y + _nextPos.y;
+            _block.style.backgroundImage = new StyleBackground(AtlasManager.Instance.GetSprite(_blockInfo.BlockIMG));
             _block.BlockBatch(_blockInfo);
         }
     }
@@ -213,6 +216,13 @@ public class InGameUI : MonoBehaviour
             _block.style.top = _calculatedPos.y;
             _block.BlockBatch(TableManager.Instance.BlockInfos[0]);
         }
+    }
+    private bool IsGameOver()
+    {
+        for (int i = 0; i < blockPickSlots.Length; i++)
+            if (IsCanBatch(blockPickSlots[i].InBlockInfo)) return false;
+
+        return true;
     }
 
 
@@ -285,6 +295,7 @@ public class InGameUI : MonoBehaviour
         DisableDebugObjs();
     }
 
+    // 타일 기준으로 블록을 배치 가능한지 체크
     private bool IsCanBatch(TileElement _tile, BlockInfo _batchBlock)
     {
         if (_tile == null) return false;
@@ -301,6 +312,21 @@ public class InGameUI : MonoBehaviour
         }
 
         return true;
+    }
+    // 전체 타일을 검사하여 블록이 배치가 가능한지 체크
+    private bool IsCanBatch(BlockInfo _blockInfo)
+    {
+        for (int y = 0; y < tiles.GetLength(0); y++)
+        {
+            for (int x = 0; x < tiles.GetLength(1); x++)
+            {
+                TileElement _currTile = tiles[y, x];
+                if (_currTile.InTile.IsBatched) continue;
+                if (IsCanBatch(_currTile, _blockInfo)) return true;
+            }
+        }
+
+        return false;
     }
     private bool IsOutOfBoard(TileElement _centerTile, BlockElement _block)
     {
@@ -431,6 +457,10 @@ public class InGameUI : MonoBehaviour
             bool _isNeedDestroy = CheckDestroyBlock();
             if (_isNeedDestroy)
                 DestroyTargetBlocks();
+
+            if (IsGameOver())
+                Debug.Log("Game Over");
+
         }
 
         selectedBlock.DragEnd();
