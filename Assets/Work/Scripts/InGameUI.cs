@@ -16,6 +16,7 @@ public class InGameUI : MonoBehaviour
     private VisualElement rootElement; // 최상단 VisualElement
     private VisualElement boardElement;
     private VisualElement bottomRoot;
+    private VisualElement gameOverPanel;
     private BlockElement[] blockPickSlots;
     private TileElement highlightTile = null; // 가장 최근 마우스가 들어온 타일
     private TileElement[,] tiles; // 보드 타일맵
@@ -29,6 +30,8 @@ public class InGameUI : MonoBehaviour
 
     private ElementsPool elementsPool;
     private List<Tile> destroyTargets;
+
+    public static event Action OnGameOver;
 
     public void Init()
     {
@@ -60,6 +63,7 @@ public class InGameUI : MonoBehaviour
         rootElement.RegisterCallback<MouseUpEvent>(OnPickSlotMouseUp);
         boardElement = rootElement.Q("board");
         bottomRoot = rootElement.Q("bottom");
+        gameOverPanel = rootElement.Q("gameover");
 
         destroyTargets = new List<Tile>();
         InitBottomBlockSlots();
@@ -263,11 +267,8 @@ public class InGameUI : MonoBehaviour
     }
     private void RegisterEventTile(TileElement _newElement)
     {
-        // FIXME: 이벤트 관련 수정 필요
-
         _newElement.RegisterCallback<MouseEnterEvent, TileElement>(OnMouseEnterSlot, _newElement);
         _newElement.RegisterCallback<MouseLeaveEvent>(OnMouseLeave);
-        _newElement.RegisterCallback<TransitionStartEvent, string>(OnStartEvent, "Destroy");
     }
 
     private void OnStartEvent(TransitionStartEvent evt, string _className)
@@ -284,6 +285,7 @@ public class InGameUI : MonoBehaviour
         if (_slot == null) return;
         if (selectedBlock == null) return;
         if (IsOutOfBoard(_slot, selectedBlock)) return;
+        if (!IsCanBatch(_slot, selectedBlock.InBlockInfo)) return;
 
         CheckHighLightBlocks(_slot);
         BatchBlock(_slot);
@@ -363,6 +365,11 @@ public class InGameUI : MonoBehaviour
         {
             DisableDebugObjs();
         }
+    }
+    private void GameOver()
+    {
+        for (int i = 0; i < blockPickSlots.Length; i++)
+            blockPickSlots[i].UnregisterCallback<MouseDownEvent>(OnPickSlotMouseDown);
     }
 
 
@@ -450,23 +457,27 @@ public class InGameUI : MonoBehaviour
 
         TileElement _tileElement = _evt.target as TileElement;
         bool _isBatchSuccess = IsCanBatch(_tileElement, selectedBlock.InBlockInfo);
+
         if (_isBatchSuccess)
         {
             BlocksBatch(_tileElement, selectedBlock.InBlockInfo);
             BlockBuild(selectedBlock, TableManager.Instance.GetRandomBlockInfo());
+
             bool _isNeedDestroy = CheckDestroyBlock();
+
             if (_isNeedDestroy)
                 DestroyTargetBlocks();
 
             if (IsGameOver())
-                Debug.Log("Game Over");
+            { 
+                GameOver();
+                OnGameOver?.Invoke();
+            }
 
         }
 
         selectedBlock.DragEnd();
         selectedBlock = null;
-
-
 
         _evt.StopPropagation();
     }

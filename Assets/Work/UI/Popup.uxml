@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Work/UI/popup.uss?fileID=7433441132597879392&amp;guid=ff5d04c4db8081e4cbfd7556b39b7fc6&amp;type=3#popup" />
+    <ui:VisualElement name="popup" class="popup-hide" style="background-color: rgb(67, 67, 67); border-top-left-radius: 20px; border-bottom-left-radius: 20px; border-top-right-radius: 20px; border-bottom-right-radius: 20px;">
+        <ui:Label tabindex="-1" text="Game Over" display-tooltip-when-elided="true" style="-unity-text-align: middle-center; font-size: 100px; height: 15%;" />
+    </ui:VisualElement>
+</ui:UXML>
