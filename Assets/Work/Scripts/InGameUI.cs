@@ -16,11 +16,10 @@ public class InGameUI : MonoBehaviour
     private VisualElement rootElement; // 최상단 VisualElement
     private VisualElement boardElement;
     private VisualElement bottomRoot;
-    private VisualElement gameOverPanel;
-    private BlockElement[] blockPickSlots;
+    private SlotElement[] blockPickSlots;
     private TileElement highlightTile = null; // 가장 최근 마우스가 들어온 타일
     private TileElement[,] tiles; // 보드 타일맵
-    private BlockElement selectedBlock; // 선택된 블록
+    private SlotElement selectedSlot; // 선택된 블록
 
     #endregion
 
@@ -37,11 +36,10 @@ public class InGameUI : MonoBehaviour
     {
         BindVariable();
         elementsPool = new ElementsPool();
-        elementsPool.AddPool<BlockDummyElement>(Constants.BLOCK_KEY, 60, rootElement);
+        elementsPool.AddPool<BlockDummyElement>(Constants.BLOCK_KEY, 200, rootElement);
 
 
-        StartCoroutine(NextFrame(DebugInit));
-
+        StartCoroutine(NextFrame(InitGame));
     }
     private void OnEnable()
     {
@@ -63,18 +61,17 @@ public class InGameUI : MonoBehaviour
         rootElement.RegisterCallback<MouseUpEvent>(OnPickSlotMouseUp);
         boardElement = rootElement.Q("board");
         bottomRoot = rootElement.Q("bottom");
-        gameOverPanel = rootElement.Q("gameover");
 
         destroyTargets = new List<Tile>();
         InitBottomBlockSlots();
     }
     private void InitBottomBlockSlots()
     {
-        blockPickSlots = new BlockElement[bottomRoot.childCount];
+        blockPickSlots = new SlotElement[bottomRoot.childCount];
 
         for (int i = 0; i < Constants.BLOCK_PICKSLOT_COUNT; i++)
         {
-            BlockElement _newPickSlot = new BlockElement();
+            SlotElement _newPickSlot = new SlotElement();
             _newPickSlot.AddToClassList(Constants.BLOCK_PICK);
 
             _newPickSlot.ChangeBlockInfo(TableManager.Instance.GetRandomBlockInfo());
@@ -85,7 +82,7 @@ public class InGameUI : MonoBehaviour
         }
     }
 
-    private void DebugInit()
+    private void InitGame()
     {
         for (int i = 0; i < blockPickSlots.Length; i++)
         {
@@ -168,18 +165,18 @@ public class InGameUI : MonoBehaviour
             _blockList.Add(_target);
         }
     }
-    private void BlockBuild(BlockElement _blockElement, BlockInfo _blockInfo)
+    private void BlockBuild(SlotElement _blockElement, BlockInfo _blockInfo)
     {
         _blockElement.ReturnPoolChildenElements(elementsPool);
         _blockElement.ChangeBlockInfo(_blockInfo);
 
         Vector2 _centerPos = _blockElement.GetLocalPosition();
-        Vector2 _blockCount = _blockElement.InBlockInfo.GetSize();
+        //Vector2 _blockCount = _blockInfo.BlockSize;// Constants.SLOT_SIZE; //_blockElement.InBlockInfo.GetSize();
 
         for (int i = 0; i < _blockElement.BatchCoord.Length; i++)
         {
             BlockDummyElement _block = elementsPool.GetParts<BlockDummyElement>(Constants.BLOCK_KEY);
-            Vector2 _blockSize = new Vector2(_blockElement.layout.width / _blockCount.x, _blockElement.layout.height / _blockCount.y);
+            Vector2 _blockSize = new Vector2(_blockElement.layout.width / _blockInfo.BlockSize.x, _blockElement.layout.height / _blockInfo.BlockSize.y);
 
             _blockElement.childElement.Add(_block);
             _block.style.width = _blockSize.x;
@@ -198,7 +195,7 @@ public class InGameUI : MonoBehaviour
             _block.BlockBatch(_blockInfo);
         }
     }
-    private void BlockBuild(VisualElement _center, BlockElement _blockElement)
+    private void BlockBuild(VisualElement _center, SlotElement _blockElement)
     {
         Vector2 _centerPos = _center.GetLocalPosition();
         Vector2 _blockSize = _blockElement.InBlockInfo.GetSize();
@@ -260,9 +257,9 @@ public class InGameUI : MonoBehaviour
 
         return _newTile;
     }
-    private BlockElement CreateBlockElement(string _defaultClass, BlockInfo _blockInfo)
+    private SlotElement CreateBlockElement(string _defaultClass, BlockInfo _blockInfo)
     {
-        BlockElement _newBlockElement = new BlockElement(_defaultClass, _blockInfo);
+        SlotElement _newBlockElement = new SlotElement(_defaultClass, _blockInfo);
         return _newBlockElement;
     }
     private void RegisterEventTile(TileElement _newElement)
@@ -271,21 +268,12 @@ public class InGameUI : MonoBehaviour
         _newElement.RegisterCallback<MouseLeaveEvent>(OnMouseLeave);
     }
 
-    private void OnStartEvent(TransitionStartEvent evt, string _className)
-    {
-
-    }
-
-    private void CreateBoardSlots(int _size)
-    {
-
-    }
     private void OnMouseEnterSlot(MouseEnterEvent _event, TileElement _slot)
     {
         if (_slot == null) return;
-        if (selectedBlock == null) return;
-        if (IsOutOfBoard(_slot, selectedBlock)) return;
-        if (!IsCanBatch(_slot, selectedBlock.InBlockInfo)) return;
+        if (selectedSlot == null) return;
+        if (IsOutOfBoard(_slot, selectedSlot)) return;
+        if (!IsCanBatch(_slot, selectedSlot.InBlockInfo)) return;
 
         CheckHighLightBlocks(_slot);
         BatchBlock(_slot);
@@ -330,7 +318,7 @@ public class InGameUI : MonoBehaviour
 
         return false;
     }
-    private bool IsOutOfBoard(TileElement _centerTile, BlockElement _block)
+    private bool IsOutOfBoard(TileElement _centerTile, SlotElement _block)
     {
         for (int i = 0; i < _block.BatchCoord.Length; i++)
         {
@@ -409,10 +397,10 @@ public class InGameUI : MonoBehaviour
         Vector2 _tilePos = _tile.GetCenterPosition();
 
 
-        for (int i = 0; i < selectedBlock.BatchCoord.Length; i++)
+        for (int i = 0; i < selectedSlot.BatchCoord.Length; i++)
         {
             Coord _centerCoord = _tile.InTile.TileCoord;
-            Coord _currentCoord = selectedBlock.BatchCoord[i];
+            Coord _currentCoord = selectedSlot.BatchCoord[i];
             int _nextX = _centerCoord.x + _currentCoord.x;
             int _nextY = _centerCoord.y + _currentCoord.y;
 
@@ -440,28 +428,28 @@ public class InGameUI : MonoBehaviour
     #region Event
     private void OnPickSlotMouseDown(MouseDownEvent _evt)
     {
-        if (selectedBlock != null)
+        if (selectedSlot != null)
         {
             // FIXME: 현재 선택된 블록 제자리 이동 및 새로운 블록 선택 기능 작성
         }
         else
         {
-            selectedBlock = _evt.target as BlockElement;
-            selectedBlock.DragStart(_evt);
-            rootElement.Add(selectedBlock.childElement);
+            selectedSlot = _evt.target as SlotElement;
+            selectedSlot.DragStart(_evt);
+            rootElement.Add(selectedSlot.childElement);
         }
     }
     private void OnPickSlotMouseUp(MouseUpEvent _evt)
     {
-        if (selectedBlock == null) return;
+        if (selectedSlot == null) return;
 
         TileElement _tileElement = _evt.target as TileElement;
-        bool _isBatchSuccess = IsCanBatch(_tileElement, selectedBlock.InBlockInfo);
+        bool _isBatchSuccess = IsCanBatch(_tileElement, selectedSlot.InBlockInfo);
 
         if (_isBatchSuccess)
         {
-            BlocksBatch(_tileElement, selectedBlock.InBlockInfo);
-            BlockBuild(selectedBlock, TableManager.Instance.GetRandomBlockInfo());
+            BlocksBatch(_tileElement, selectedSlot.InBlockInfo);
+            BlockBuild(selectedSlot, TableManager.Instance.GetRandomBlockInfo());
 
             bool _isNeedDestroy = CheckDestroyBlock();
 
@@ -469,23 +457,23 @@ public class InGameUI : MonoBehaviour
                 DestroyTargetBlocks();
 
             if (IsGameOver())
-            { 
+            {
                 GameOver();
                 OnGameOver?.Invoke();
             }
 
         }
 
-        selectedBlock.DragEnd();
-        selectedBlock = null;
+        selectedSlot.DragEnd();
+        selectedSlot = null;
 
         _evt.StopPropagation();
     }
     private void OnPickSlotMouseMove(MouseMoveEvent _evt)
     {
-        if (selectedBlock == null) return;
+        if (selectedSlot == null) return;
 
-        selectedBlock.Dragging(_evt);
+        selectedSlot.Dragging(_evt);
         _evt.StopPropagation();
     }
     #endregion

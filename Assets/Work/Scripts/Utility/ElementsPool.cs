@@ -49,7 +49,6 @@ public class ElementsPool
 
         if (!poolDict.ContainsKey(_key)) return null;
         if (poolDict[_key].Count <= 0) return null;
-        Debug.Log(poolDict[_key].Count);
         T _result = poolDict[_key].Dequeue() as T;
         if (!_result.visible) _result.visible = true;
 
@@ -62,7 +61,6 @@ public class ElementsPool
         _element.RemoveFromHierarchy();
         _element.visible = false;
         poolDict[_key].Enqueue(_element);
-        Debug.Log("In Block");
     }
 
     // public VisualElement GetElement(string _key)

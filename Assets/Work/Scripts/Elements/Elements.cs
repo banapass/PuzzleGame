@@ -17,17 +17,17 @@ public class TileElement : VisualElement
     }
 }
 
-public class BlockElement : VisualElement
+public class SlotElement : VisualElement
 {
     public BlockInfo InBlockInfo { get; private set; }
     public Coord[] BatchCoord { get { return InBlockInfo.BlockCoord; } }
     public VisualElement childElement;
 
-    public BlockElement()
+    public SlotElement()
     {
         SetChildElement();
     }
-    public BlockElement(string _className, BlockInfo _blockInfo)
+    public SlotElement(string _className, BlockInfo _blockInfo)
     {
         if (_className != null) this.AddToClassList(_className);
         InBlockInfo = _blockInfo;

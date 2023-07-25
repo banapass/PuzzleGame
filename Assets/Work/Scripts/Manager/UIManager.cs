@@ -27,13 +27,12 @@ public class UIManager : Singleton<UIManager>
 
     private void OnGameOver()
     {
-        Debug.Log("Game Over");
         ShowPopup("popup");
     }
     public void ShowPopup(string _popupName)
     {
         VisualElement _popup = popupRoot.Q(_popupName);
-        _popup.AddToClassList(UiPopup.POPUP_SHOW);
+        _popup.AddToClassList(UIPopup.POPUP_SHOW);
     }
 
 }

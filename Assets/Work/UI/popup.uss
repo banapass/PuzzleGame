@@ -18,4 +18,5 @@
     transition-timing-function: ease-out-back;
     transition-duration: 0.5s;
     display: flex;
+    opacity: 1;
 }

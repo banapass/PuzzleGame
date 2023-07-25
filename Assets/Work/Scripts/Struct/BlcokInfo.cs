@@ -4,14 +4,13 @@ using UnityEngine;
 public struct BlockInfo
 {
     public string BlockIMG;
+    public Vector2 BlockSize;
     public Coord[] BlockCoord; //{ get; set; }
 
 
     public Vector2 GetSize()
     {
-
         return new Vector2(GetCountX() + 1, GetCountY() + 1);
-
     }
     private int GetCountX()
     {
